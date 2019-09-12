@@ -1,0 +1,63 @@
+/*
+Custom css for Allometr app
+*/
+
+input[type="number"] {
+  max-width: 80%;
+}
+
+/*
+div.table_container {
+  overflow-y: scroll;
+}
+*/
+
+/* debug */
+#debug {
+  z-index: 1500;
+}
+
+/* language selector */
+.navbar-form {
+  margin-top: 5px;
+  margin-bottom: 0px;
+}
+
+/* we need to change the leaflet layer control z-index */
+.navbar-static-top {
+  z-index: 2000 !important;
+}
+
+.navbar-form > .form-group {
+  position: fixed;
+  right: 25px;
+}
+
+.flag-lang {
+  display: inline;
+  vertical-align: middle;
+  padding-left: 10px;
+}
+
+.flag-image {
+  border-radius: 5%;
+}
+
+.shiny-output-error-drawed_polygon_warn {
+  color: red;
+}
+
+/* trick to hide the spinner when the dygraph loads */
+#trends_daily > div {
+  background-color: var(--main-bg-color);
+}
+
+#daily_main_panel {
+  border-bottom: 5px solid var(--main-selected-color);
+}
+
+/* position of the modal */
+div.modal-dialog {
+  position: relative;
+  top: 300px;
+}
