@@ -13,3 +13,5 @@ Imports:
     shiny,
     shinyjs,
     leaflet
+URL: https://github.com/MalditoBarbudo/meteolandappkg
+BugReports: https://github.com/MalditoBarbudo/meteolandappkg/issues
