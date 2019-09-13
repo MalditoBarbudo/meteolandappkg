@@ -12,6 +12,15 @@ LazyData: true
 Imports: 
     shiny,
     shinyjs,
-    leaflet
+    leaflet,
+    meteoland,
+    sp,
+    htmltools,
+    dygraphs,
+    xts,
+    ncdf4,
+    ggplot2,
+    rgeos,
+    DT
 URL: https://github.com/MalditoBarbudo/meteolandappkg
 BugReports: https://github.com/MalditoBarbudo/meteolandappkg/issues
