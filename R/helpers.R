@@ -104,7 +104,7 @@ getTopographyObject <- function(user_df) {
   for (i in 1:n_coords) {
     vals[[i]] <- ncExtractVarValueByCoords(
       nc_file = file.path(
-        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'MDT', 'Topology_grid.nc'
+        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'MDT', 'Topology_grid.nc'
       ),
       x_coord = user_coords_utm@coords[i,1],
       y_coord = user_coords_utm@coords[i,2],
@@ -159,7 +159,7 @@ current_points_mode_process <- function(user_df, user_dates,
     # files
     day_data[[i]] <- meteoland::readmeteorologypoint(
       file.path(
-        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Climate',
+        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'Climate',
         'Sources', 'AEMET', 'Download', 'DailyCAT',
         paste0(as.character(datevec[[i]]), '.txt')
       )
@@ -308,7 +308,7 @@ historical_points_mode_process <- function(user_df, user_dates,
 
   # load the interpolator mother data
   load(file.path(
-    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Climate', 'Products',
+    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'Climate', 'Products',
     'MeteorologyInterpolationData', 'Interpolator_Mother.rda'
   ))
 
@@ -424,7 +424,7 @@ projection_points_mode_process <- function(user_df, rcm, rcp,
 
   # folder & files paths
   dir_path <- file.path(
-    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Climate', 'Sources', 'EUROCordex'
+    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'Climate', 'Sources', 'EUROCordex'
   )
 
   hist_pred_path <- file.path(dir_path, rcm, 'historical')
@@ -568,7 +568,7 @@ current_grid_mode_process <- function(user_coords, user_dates,
     # files
     day_data[[i]] <- meteoland::readmeteorologypoint(
       file.path(
-        '/home', 'vgranda', 'LFC', '11_meteoland_data',
+        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
         'Climate', 'Sources', 'AEMET','Download', 'DailyCAT',
         paste0(as.character(datevec[[i]]), '.txt')
       )
@@ -763,7 +763,6 @@ current_grid_mode_process <- function(user_coords, user_dates,
 
 }
 
-################################################################################
 # projection grid mode
 projection_grid_mode_process <- function(user_coords, rcm, rcp,
                                          updateProgress = NULL) {
@@ -776,11 +775,13 @@ projection_grid_mode_process <- function(user_coords, rcm, rcp,
     )
   }
 
-  dir <- file.path('/home', 'miquel', 'Datasets', 'Climate', 'Products', 'Pixels1k',
-                   'Projections', rcm, rcp)
+  dir <- file.path(
+    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
+    'Climate', 'Products', 'Pixels1k', 'Projections', rcm, rcp
+  )
   file <- paste0(rcm, '_', gsub('\\.', '', rcp), '.nc')
 
-  nc <- nc_open(file.path(dir, file))
+  nc <- ncdf4::nc_open(file.path(dir, file))
 
   # STEP 2 CONVERT TO UTM THE USER COORDS
 
@@ -793,15 +794,15 @@ projection_grid_mode_process <- function(user_coords, rcm, rcp,
 
   # convert to utm
   # make a coordinates object from the data frame provided
-  coordinates(user_coords) <- ~x+y
+  sp::coordinates(user_coords) <- ~x+y
 
   # add the projection string attribute
-  proj4string(user_coords) <- CRS("+proj=longlat +datum=WGS84")
+  sp::proj4string(user_coords) <- sp::CRS("+proj=longlat +datum=WGS84")
 
   # transform the coordinates porjection to the correct projection
-  user_coords <- as.data.frame(spTransform(
+  user_coords <- as.data.frame(sp::spTransform(
     user_coords,
-    CRS("+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0")
+    sp::CRS("+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0")
   ))
 
   # STEP 3 SUBSET THE netCDF DATA
@@ -830,7 +831,7 @@ projection_grid_mode_process <- function(user_coords, rcm, rcp,
 
   # stop if the grid is too big
   if (x_index_length * y_index_length > 2500) {
-    nc_close(nc)
+    ncdf4::nc_close(nc)
     return('proj_grid_too_large')
   }
 
@@ -851,7 +852,7 @@ projection_grid_mode_process <- function(user_coords, rcm, rcp,
       )
     }
 
-    res_list[[i]] <- ncvar_get(nc, var_names[i],
+    res_list[[i]] <- ncdf4::ncvar_get(nc, var_names[i],
                                start = c(x_index_upper, y_index_bottom, 1),
                                count = c(x_index_length, y_index_length, -1))
   }
@@ -861,10 +862,10 @@ projection_grid_mode_process <- function(user_coords, rcm, rcp,
   # STEP 4 CREATE ALSO THE SPATIAL POINTS TO DRAW THE GRID IN THE VISUALIZATION
 
   # also, as here we have the indexes, we get the points to generate the grid
-  x = ncvar_get(nc, 'X', x_index_upper, x_index_length)
-  y = ncvar_get(nc, 'Y', y_index_bottom, y_index_length)
+  x = ncdf4::ncvar_get(nc, 'X', x_index_upper, x_index_length)
+  y = ncdf4::ncvar_get(nc, 'Y', y_index_bottom, y_index_length)
 
-  points_sel <- SpatialPoints(
+  points_sel <- sp::SpatialPoints(
     expand.grid(list(x = x, y = y))
   )
 
@@ -875,12 +876,11 @@ projection_grid_mode_process <- function(user_coords, rcm, rcp,
               y_vals = y)
 
   # close nc
-  nc_close(nc)
+  ncdf4::nc_close(nc)
 
   return(res)
 }
 
-################################################################################
 # Historical Grid mode
 historical_grid_mode_process <- function(user_coords, user_dates,
                                          updateProgress = NULL) {
@@ -896,15 +896,15 @@ historical_grid_mode_process <- function(user_coords, user_dates,
   }
 
   # make a coordinates object from the data frame provided
-  coordinates(user_coords) <- ~x+y
+  sp::coordinates(user_coords) <- ~x+y
 
   # add the projection string attribute
-  proj4string(user_coords) <- CRS("+proj=longlat +datum=WGS84")
+  sp::proj4string(user_coords) <- sp::CRS("+proj=longlat +datum=WGS84")
 
   # transform the coordinates projection to the correct projection
-  user_coords <- as.data.frame(spTransform(
+  user_coords <- as.data.frame(sp::spTransform(
     user_coords,
-    CRS("+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0")
+    sp::CRS("+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0")
   ))
 
   # STEP 2 OPEN THE CONN TO THE netCDF FILE
@@ -936,10 +936,12 @@ historical_grid_mode_process <- function(user_coords, user_dates,
     }
 
     # nc file name
-    file_name <- file.path('/home', 'miquel', 'Datasets', 'Climate', 'Products',
-                           'Pixels1k', 'Historical', 'netCDF',
-                           paste0(year, '_historical_netCDF.nc'))
-    nc <- nc_open(file_name)
+    file_name <- file.path(
+      '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
+      'Climate', 'Products', 'Pixels1k', 'Historical', 'netCDF',
+      paste0(year, '_historical_netCDF.nc')
+    )
+    nc <- ncdf4::nc_open(file_name)
 
     # STEP 3 SUBSET THE netCDF DATA
 
@@ -979,7 +981,7 @@ historical_grid_mode_process <- function(user_coords, user_dates,
 
     # stop if the grid is too big
     if (x_index_length * y_index_length > 2500) {
-      nc_close(nc)
+      ncdf4::nc_close(nc)
       return('hist_grid_too_large')
     }
 
@@ -992,7 +994,7 @@ historical_grid_mode_process <- function(user_coords, user_dates,
     # loop to retrieve each var data in an array
     for (i in 1:length(var_names)) {
 
-      res_list[[i]] <- ncvar_get(nc, var_names[i],
+      res_list[[i]] <- ncdf4::ncvar_get(nc, var_names[i],
                                  start = c(x_index_upper, y_index_bottom, t_index_bottom),
                                  count = c(x_index_length, y_index_length, t_index_length))
     }
@@ -1002,11 +1004,11 @@ historical_grid_mode_process <- function(user_coords, user_dates,
     # also, as here we have the indexes, we get the points to generate the grid
     # here this should be outside of the loop, but in  this way we are able to
     # close the nc file in order to avoid errors
-    x = ncvar_get(nc, 'X', x_index_upper, x_index_length)
-    y = ncvar_get(nc, 'Y', y_index_bottom, y_index_length)
+    x = ncdf4::ncvar_get(nc, 'X', x_index_upper, x_index_length)
+    y = ncdf4::ncvar_get(nc, 'Y', y_index_bottom, y_index_length)
 
     # close nc
-    nc_close(nc)
+    ncdf4::nc_close(nc)
 
   }
 
@@ -1035,7 +1037,7 @@ historical_grid_mode_process <- function(user_coords, user_dates,
   }
 
   # grid to return in the res
-  points_sel <- SpatialPoints(
+  points_sel <- sp::SpatialPoints(
     expand.grid(list(x = x, y = y))
   )
 
@@ -1049,10 +1051,9 @@ historical_grid_mode_process <- function(user_coords, user_dates,
 
 }
 
-################################################################################
 # Interpolated data wrapper function.
 #
-# Here is where the if's must reside, one function that only check one for the
+# Here is where the if's must reside, one function that only check once for the
 # mode and return the interpolated data fot that mode. This makes the server.R
 # file code more clean and it's better for maintenance.
 
@@ -1068,8 +1069,10 @@ one_ring_to_dominate_all <- function(input, user_coords,
 
       # check for requirements, no need to compute nothing if not all inputs are
       # present
-      req(user_coords$df[1,1], user_coords$df[1,2],
-          input$date_range_current[1], input$date_range_current[1])
+      shiny::req(
+        user_coords$df[1,1], user_coords$df[1,2],
+        input$date_range_current[1], input$date_range_current[1]
+      )
 
       # interpolated data
       interpolated_data <- current_points_mode_process(
@@ -1086,7 +1089,7 @@ one_ring_to_dominate_all <- function(input, user_coords,
     if (input$mode_sel == 'Historical') {
 
       # check for requirements (inputs)
-      req(user_coords$df[1,1], user_coords$df[1,2],
+      shiny::req(user_coords$df[1,1], user_coords$df[1,2],
           input$date_range_historical[1], input$date_range_historical[2])
 
       # interpolated data
@@ -1104,7 +1107,7 @@ one_ring_to_dominate_all <- function(input, user_coords,
     if (input$mode_sel == 'Projection') {
 
       # check for requirements (inputs)
-      req(user_coords$df[1,1], user_coords$df[1,2],
+      shiny::req(user_coords$df[1,1], user_coords$df[1,2],
           input$rcm, input$rcp)
 
       # interpolated data
@@ -1127,7 +1130,7 @@ one_ring_to_dominate_all <- function(input, user_coords,
     if (input$mode_sel == 'Current') {
 
       # check for requirements (inputs)
-      req(input$longitude, input$longitude_bottom, input$latitude,
+      shiny::req(input$longitude, input$longitude_bottom, input$latitude,
           input$latitude_bottom, input$date_range_current)
 
       # user_coords
@@ -1151,7 +1154,7 @@ one_ring_to_dominate_all <- function(input, user_coords,
     if (input$mode_sel == 'Projection') {
 
       # check for requirements
-      req(input$longitude, input$longitude_bottom, input$latitude,
+      shiny::req(input$longitude, input$longitude_bottom, input$latitude,
           input$latitude_bottom, input$rcm, input$rcp)
 
       # user_coords
@@ -1176,7 +1179,7 @@ one_ring_to_dominate_all <- function(input, user_coords,
     if (input$mode_sel == 'Historical') {
 
       # check for requirements (inputs)
-      req(input$longitude, input$longitude_bottom, input$latitude,
+      shiny::req(input$longitude, input$longitude_bottom, input$latitude,
           input$latitude_bottom,
           input$date_range_historical[1], input$date_range_historical[2])
 
@@ -1252,14 +1255,14 @@ content_function <- function(input, data, file) {
       for (i in 1:length(data@data)) {
         tmp_file <- paste0('meteoland_output_', i, '.txt')
         files_to_compress <- c(files_to_compress, tmp_file)
-        writemeteorologypoint(data@data[[i]], tmp_file)
+        meteoland::writemeteorologypoint(data@data[[i]], tmp_file)
       }
 
       # create the zip
       zip(file, files_to_compress)
     } else {
       # if only one, write it directly
-      writemeteorologypoint(data@data[[1]], file)
+      meteoland::writemeteorologypoint(data@data[[1]], file)
     }
   }
 
@@ -1272,7 +1275,7 @@ content_function <- function(input, data, file) {
       # if more than one date, we create a zip with nc files for each day
       temporal_dir <- tempdir()
       setwd(tempdir())
-      writemeteorologygridfiles(
+      meteoland::writemeteorologygridfiles(
         object = data,
         metadatafile = 'metadata_grid.txt'
       )
@@ -1280,7 +1283,7 @@ content_function <- function(input, data, file) {
       # create the zip
       zip(file, dir(pattern = '*.nc$'))
     } else {
-      writemeteorologygrid(data, data@dates[[1]], file)
+      meteoland::writemeteorologygrid(data, data@dates[[1]], file)
     }
 
   }
@@ -1288,23 +1291,23 @@ content_function <- function(input, data, file) {
   if (input$mode_sel %in% c('Projection') & input$point_grid_sel == 'Grid') {
 
     # create the nc file
-    dimX <- ncdim_def('X', 'meters', data$x_vals)
-    dimY <- ncdim_def('Y', 'meters', data$y_vals)
-    dimT <- ncdim_def("Time", "months", 1:1140)
+    dimX <- ncdf4::ncdim_def('X', 'meters', data$x_vals)
+    dimY <- ncdf4::ncdim_def('Y', 'meters', data$y_vals)
+    dimT <- ncdf4::ncdim_def("Time", "months", 1:1140)
 
-    Precipitation <- ncvar_def('Precipitation', 'mm',
+    Precipitation <- ncdf4::ncvar_def('Precipitation', 'mm',
                                list(dimX, dimY, dimT), NA)
-    MeanTemperature <- ncvar_def('MeanTemperature', 'Celsius degrees',
+    MeanTemperature <- ncdf4::ncvar_def('MeanTemperature', 'Celsius degrees',
                                  list(dimX, dimY, dimT), NA)
-    MaxTemperature <- ncvar_def('MaxTemperature', 'Celsius degrees',
+    MaxTemperature <- ncdf4::ncvar_def('MaxTemperature', 'Celsius degrees',
                                 list(dimX, dimY, dimT), NA)
-    MinTemperature <- ncvar_def('MinTemperature', 'Celsius degrees',
+    MinTemperature <- ncdf4::ncvar_def('MinTemperature', 'Celsius degrees',
                                 list(dimX, dimY, dimT), NA)
-    MeanRelativeHumidity <- ncvar_def('MeanRelativeHumidity', 'Percentage',
+    MeanRelativeHumidity <- ncdf4::ncvar_def('MeanRelativeHumidity', 'Percentage',
                                       list(dimX, dimY, dimT), NA)
-    PET <- ncvar_def('PET', 'mm', list(dimX, dimY, dimT), NA)
+    PET <- ncdf4::ncvar_def('PET', 'mm', list(dimX, dimY, dimT), NA)
 
-    nc <- nc_create(
+    nc <- ncdf4::nc_create(
       file,
       list(Precipitation, MeanTemperature,
            MaxTemperature, MinTemperature,
@@ -1312,13 +1315,13 @@ content_function <- function(input, data, file) {
     )
 
     for (var in names(data$res_list)) {
-      ncvar_put(
+      ncdf4::ncvar_put(
         nc, var,
         data$res_list[[var]]
       )
     }
 
-    nc_close(nc)
+    ncdf4::nc_close(nc)
 
   }
 
@@ -1326,38 +1329,38 @@ content_function <- function(input, data, file) {
 
     # create the nc file
     # dimension variables
-    dimX <- ncdim_def('X', 'meters', data$x_vals)
-    dimY <- ncdim_def('Y', 'meters', data$y_vals)
-    dimT <- ncdim_def('Time', 'days',
+    dimX <- ncdf4::ncdim_def('X', 'meters', data$x_vals)
+    dimY <- ncdf4::ncdim_def('Y', 'meters', data$y_vals)
+    dimT <- ncdf4::ncdim_def('Time', 'days',
                       1:length(seq(as.Date(input$date_range_historical[1]),
                                    as.Date(input$date_range_historical[2]),
                                    by = 'day')))
 
     # variables
-    MeanTemperature <- ncvar_def('MeanTemperature', 'Celsius degrees',
+    MeanTemperature <- ncdf4::ncvar_def('MeanTemperature', 'Celsius degrees',
                                  list(dimX, dimY, dimT), NA)
-    MaxTemperature <- ncvar_def('MaxTemperature', 'Celsius degrees',
+    MaxTemperature <- ncdf4::ncvar_def('MaxTemperature', 'Celsius degrees',
                                 list(dimX, dimY, dimT), NA)
-    MinTemperature <- ncvar_def('MinTemperature', 'Celsius degrees',
+    MinTemperature <- ncdf4::ncvar_def('MinTemperature', 'Celsius degrees',
                                 list(dimX, dimY, dimT), NA)
-    Precipitation <- ncvar_def('Precipitation', 'mm',
+    Precipitation <- ncdf4::ncvar_def('Precipitation', 'mm',
                                list(dimX, dimY, dimT), NA)
-    MeanRelativeHumidity <- ncvar_def('MeanRelativeHumidity', 'Percentage',
+    MeanRelativeHumidity <- ncdf4::ncvar_def('MeanRelativeHumidity', 'Percentage',
                                       list(dimX, dimY, dimT), NA)
-    MaxRelativeHumidity <- ncvar_def('MaxRelativeHumidity', 'Percentage',
+    MaxRelativeHumidity <- ncdf4::ncvar_def('MaxRelativeHumidity', 'Percentage',
                                      list(dimX, dimY, dimT), NA)
-    MinRelativeHumidity <- ncvar_def('MinRelativeHumidity', 'Percentage',
+    MinRelativeHumidity <- ncdf4::ncvar_def('MinRelativeHumidity', 'Percentage',
                                      list(dimX, dimY, dimT), NA)
-    Radiation <- ncvar_def('Radiation', '',
+    Radiation <- ncdf4::ncvar_def('Radiation', '',
                            list(dimX, dimY, dimT), NA)
-    WindSpeed <- ncvar_def('WindSpeed', 'meters per second',
+    WindSpeed <- ncdf4::ncvar_def('WindSpeed', 'meters per second',
                            list(dimX, dimY, dimT), NA)
-    WindDirection <- ncvar_def('WindDirection', '',
+    WindDirection <- ncdf4::ncvar_def('WindDirection', '',
                                list(dimX, dimY, dimT), NA)
-    PET <- ncvar_def('PET', 'mm',
+    PET <- ncdf4::ncvar_def('PET', 'mm',
                      list(dimX, dimY, dimT), NA)
 
-    nc <- nc_create(
+    nc <- ncdf4::nc_create(
       file,
       list(MeanTemperature, MaxTemperature, MinTemperature,
            Precipitation, MeanRelativeHumidity, MaxRelativeHumidity,
@@ -1367,35 +1370,14 @@ content_function <- function(input, data, file) {
 
     # fill the nc file
     for (var in names(data$res_list)) {
-      ncvar_put(
+      ncdf4::ncvar_put(
         nc, var,
         data$res_list[[var]]
       )
     }
 
     # close the nc file
-    nc_close(nc)
+    ncdf4::nc_close(nc)
 
   }
 }
-
-################################################################################
-#### QA needed data ####
-qa_years <- 1976:2016
-qa_sum <- vector('list', length(qa_years))
-qa_list <- vector('list', length(qa_years))
-
-for (i in 1:length(qa_years)) {
-  qa_list[[i]] <- readRDS(
-    file.path('/home', 'miquel', 'Datasets', 'Climate', 'Products',
-              'MeteorologyInterpolationData', 'CrossValidations',
-              paste0('CV_', qa_years[[i]], '.rds'))
-    # paste0('/run/user/1000/gvfs/smb-share:server=serverprocess,share=miquel/Datasets/Climate/Products/MeteorologyInterpolationData/CrossValidations/',
-    #        paste0('CV_', qa_years[[i]], '.rds'))
-  )
-
-  qa_sum[[i]] <- summary(qa_list[[i]])
-}
-
-qa_vars <- row.names(qa_sum[[1]])
-qa_statistics <- names(qa_sum[[1]])

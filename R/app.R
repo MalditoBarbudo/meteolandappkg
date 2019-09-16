@@ -7,6 +7,25 @@ meteoland_app <- function(
 
 ) {
 
+  ### QA needed data ############################################################
+  qa_years <- 1976:2016
+  qa_sum <- vector('list', length(qa_years))
+  qa_list <- vector('list', length(qa_years))
+
+  for (i in 1:length(qa_years)) {
+    qa_list[[i]] <- readRDS(
+      file.path(
+        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
+        'Climate', 'Products', 'MeteorologyInterpolationData', 'CrossValidations',
+        paste0('CV_', qa_years[[i]], '.rds')
+      )
+    )
+    qa_sum[[i]] <- summary(qa_list[[i]])
+  }
+
+  qa_vars <- row.names(qa_sum[[1]])
+  qa_statistics <- names(qa_sum[[1]])
+
   ### Language input ###########################################################
   shiny::addResourcePath(
     'images', system.file('resources', 'images', package = 'meteolandappkg')
