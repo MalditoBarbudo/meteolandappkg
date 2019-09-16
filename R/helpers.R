@@ -228,7 +228,7 @@ current_points_mode_process <- function(user_df, user_dates,
   )
 
   # and set the parameters obtained in the calibration
-  load('Data/calibrations.RData')
+  # load('Data/calibrations.RData')
   interpolator@params$N_MinTemperature = tmin_cal$N
   interpolator@params$alpha_MinTemperature = tmin_cal$alpha
   interpolator@params$N_MaxTemperature = tmax_cal$N
@@ -489,7 +489,7 @@ current_grid_mode_process <- function(user_coords, user_dates,
 
   # load the topography info for the grid (in this case we cheat a little, as
   # we are gonna treat the grid cells as points)
-  load('Data/grid_as_points_topography.RData')
+  # load('Data/grid_as_points_topography.RData')
 
   # get the coords as an SpatialPoints object, we will need this to get the
   # intersection of cells in the polygon created by the user
@@ -637,7 +637,7 @@ current_grid_mode_process <- function(user_coords, user_dates,
   )
 
   # and set the parameters obtained in the calibration
-  load('Data/calibrations.RData')
+  # load('Data/calibrations.RData')
   interpolator@params$N_MinTemperature = tmin_cal$N
   interpolator@params$alpha_MinTemperature = tmin_cal$alpha
   interpolator@params$N_MaxTemperature = tmax_cal$N
@@ -1203,10 +1203,8 @@ one_ring_to_dominate_all <- function(input, user_coords,
 
 }
 
-################################################################################
 # Download button functions. This functions check for the mode selected by the
 # user and generate the data file and filename accordingly.
-
 filename_function <- function(input, data) {
 
   # points modes

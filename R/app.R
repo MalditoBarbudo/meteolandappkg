@@ -7,24 +7,6 @@ meteoland_app <- function(
 
 ) {
 
-  ### QA needed data ############################################################
-  qa_years <- 1976:2016
-  qa_sum <- vector('list', length(qa_years))
-  qa_list <- vector('list', length(qa_years))
-
-  for (i in 1:length(qa_years)) {
-    qa_list[[i]] <- readRDS(
-      file.path(
-        '/Datasets', 'Climate', 'Products', 'MeteorologyInterpolationData',
-        'CrossValidations', paste0('CV_', qa_years[[i]], '.rds')
-      )
-    )
-    qa_sum[[i]] <- summary(qa_list[[i]])
-  }
-
-  qa_vars <- row.names(qa_sum[[1]])
-  qa_statistics <- names(qa_sum[[1]])
-
   ### Language input ###########################################################
   shiny::addResourcePath(
     'images', system.file('resources', 'images', package = 'meteolandappkg')
@@ -253,11 +235,22 @@ meteoland_app <- function(
         )
       )
     }) ## end of proper UI
+
+    #### user coords data frame ####
+    # empty coordinates data frame, to be able to add clicks in the map and
+    # manual inputs in the case of more than one coordinate pair
+    user_coords <- reactiveValues()
+
+    user_coords$df <- data.frame(
+      lat = numeric(0),
+      lng =  numeric(0)
+    )
+
   } # end of server function
 
   # Run the application
   meteolandapp <- shiny::shinyApp(
-    ui = ui, server = server#,
+    ui = ui, server = server,
     # onStart = function() {
     #
     #   ## on stop routine to cloose the db pool
