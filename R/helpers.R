@@ -104,7 +104,7 @@ getTopographyObject <- function(user_df) {
   for (i in 1:n_coords) {
     vals[[i]] <- ncExtractVarValueByCoords(
       nc_file = file.path(
-        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'MDT', 'Topology_grid.nc'
+        '/Datasets', 'MDT', 'Topology_grid.nc'
       ),
       x_coord = user_coords_utm@coords[i,1],
       y_coord = user_coords_utm@coords[i,2],
@@ -159,7 +159,7 @@ current_points_mode_process <- function(user_df, user_dates,
     # files
     day_data[[i]] <- meteoland::readmeteorologypoint(
       file.path(
-        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'Climate',
+        '/Datasets', 'Climate',
         'Sources', 'AEMET', 'Download', 'DailyCAT',
         paste0(as.character(datevec[[i]]), '.txt')
       )
@@ -308,7 +308,7 @@ historical_points_mode_process <- function(user_df, user_dates,
 
   # load the interpolator mother data
   load(file.path(
-    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'Climate', 'Products',
+    '/Datasets', 'Climate', 'Products',
     'MeteorologyInterpolationData', 'Interpolator_Mother.rda'
   ))
 
@@ -424,7 +424,7 @@ projection_points_mode_process <- function(user_df, rcm, rcp,
 
   # folder & files paths
   dir_path <- file.path(
-    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets', 'Climate', 'Sources', 'EUROCordex'
+    '/Datasets', 'Climate', 'Sources', 'EUROCordex'
   )
 
   hist_pred_path <- file.path(dir_path, rcm, 'historical')
@@ -568,7 +568,7 @@ current_grid_mode_process <- function(user_coords, user_dates,
     # files
     day_data[[i]] <- meteoland::readmeteorologypoint(
       file.path(
-        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
+        '/Datasets',
         'Climate', 'Sources', 'AEMET','Download', 'DailyCAT',
         paste0(as.character(datevec[[i]]), '.txt')
       )
@@ -776,7 +776,7 @@ projection_grid_mode_process <- function(user_coords, rcm, rcp,
   }
 
   dir <- file.path(
-    '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
+    '/Datasets',
     'Climate', 'Products', 'Pixels1k', 'Projections', rcm, rcp
   )
   file <- paste0(rcm, '_', gsub('\\.', '', rcp), '.nc')
@@ -937,7 +937,7 @@ historical_grid_mode_process <- function(user_coords, user_dates,
 
     # nc file name
     file_name <- file.path(
-      '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
+      '/Datasets',
       'Climate', 'Products', 'Pixels1k', 'Historical', 'netCDF',
       paste0(year, '_historical_netCDF.nc')
     )
@@ -1250,12 +1250,12 @@ content_function <- function(input, data, file) {
       # if more than one, we must establish a temporal directory, create the
       # different txt files, compress them and return the file
       temporal_dir <- tempdir()
-      setwd(tempdir())
+      # setwd(tempdir())
       files_to_compress <- c()
       for (i in 1:length(data@data)) {
         tmp_file <- paste0('meteoland_output_', i, '.txt')
         files_to_compress <- c(files_to_compress, tmp_file)
-        meteoland::writemeteorologypoint(data@data[[i]], tmp_file)
+        meteoland::writemeteorologypoint(data@data[[i]], file.path(temporal_dir, tmp_file))
       }
 
       # create the zip
@@ -1274,16 +1274,17 @@ content_function <- function(input, data, file) {
 
       # if more than one date, we create a zip with nc files for each day
       temporal_dir <- tempdir()
-      setwd(tempdir())
+      # setwd(tempdir())
       meteoland::writemeteorologygridfiles(
+        dir = temporal_dir,
         object = data,
         metadatafile = 'metadata_grid.txt'
       )
 
       # create the zip
-      zip(file, dir(pattern = '*.nc$'))
+      zip(file, dir(temporal_dir, pattern = '*.nc$'))
     } else {
-      meteoland::writemeteorologygrid(data, data@dates[[1]], file)
+      meteoland::writemeteorologygrid(data, data@dates[[1]], file.path(temporal_dir, file))
     }
 
   }

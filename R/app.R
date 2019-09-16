@@ -15,9 +15,8 @@ meteoland_app <- function(
   for (i in 1:length(qa_years)) {
     qa_list[[i]] <- readRDS(
       file.path(
-        '/home', 'vgranda', 'LFC', '11_meteoland_data', 'Datasets',
-        'Climate', 'Products', 'MeteorologyInterpolationData', 'CrossValidations',
-        paste0('CV_', qa_years[[i]], '.rds')
+        '/Datasets', 'Climate', 'Products', 'MeteorologyInterpolationData',
+        'CrossValidations', paste0('CV_', qa_years[[i]], '.rds')
       )
     )
     qa_sum[[i]] <- summary(qa_list[[i]])
